@@ -1,0 +1,119 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MASTER CONTROL CONTROLLER PORTAL</title>
+    <style>
+        :root {
+            --bg-black: #08090c;
+            --terminal-bg: #0d0f14;
+            --accent-orange: #ff9100;
+            --accent-blue: #00e1ff;
+            --accent-red: #ff3366;
+            --border-color: #1e2530;
+            --text-gray: #7e8c9f;
+        }
+        body { background-color: var(--bg-black); color: #ffffff; font-family: monospace; margin: 0; padding: 15px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .admin-container { width: 100%; max-width: 450px; background-color: var(--terminal-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; box-sizing: border-box; }
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; font-size: 11px; color: var(--text-gray); margin-bottom: 5px; }
+        input, select { width: 100%; background-color: #06070a; border: 1px solid var(--border-color); padding: 12px; color: #fff; border-radius: 4px; box-sizing: border-box; outline: none; font-family: monospace; }
+        .trigger-btn { width: 100%; background: linear-gradient(45deg, #ff5100, var(--accent-orange)); color: white; border: none; padding: 14px; font-weight: bold; cursor: pointer; border-radius: 4px; font-family: monospace; font-size: 13px; text-transform: uppercase; }
+        .token-hud-table { margin-top: 20px; border: 1px solid var(--border-color); font-size: 11px; max-height: 180px; overflow-y: auto; border-radius: 4px; }
+        .hud-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; background-color: #0a0b0e; border-bottom: 1px solid var(--border-color); }
+        .wipe-btn { background: none; border: 1px solid var(--accent-red); color: var(--accent-red); padding: 3px 6px; cursor: pointer; border-radius: 3px; font-family: monospace; font-size: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="admin-container">
+    
+    <!-- 🔒 CONTROL AUTH GATE -->
+    <div id="auth_block">
+        <h2 style="color:var(--accent-orange); text-align:center; font-size:14px; margin-top:0;">⚡ SECURE ADMINISTRATIVE AUTHENTICATION</h2>
+        <div class="input-group">
+            <label>INPUT CORE ROOT SECURITY PASSPHRASE PIN</label>
+            <input type="text" id="admin_password_field" placeholder="Enter root unlock pin...">
+        </div>
+        <button class="trigger-btn" onclick="authenticateAdminSystem()">UNLOCK REGISTERS</button>
+    </div>
+
+    <!-- 🛠️ KEY MINT WORKSPACE -->
+    <div id="workspace_block" style="display:none;">
+        <h2 style="color:var(--accent-blue); text-align:center; font-size:14px; margin-top:0;">⚡ SUITE KEY CREATOR DATABASE</h2>
+        <div class="input-group">
+            <label>WRITE CUSTOM LICENSE KEY ALIAS (YOUR CHOICE)</label>
+            <input type="text" id="new_custom_key" placeholder="e.g. VIP-MUHAMMAD-PASS">
+        </div>
+        <div class="input-group">
+            <label>TIME WINDOW SEGMENT DURATION</label>
+            <select id="new_key_duration">
+                <option value="1 Month">1 MONTH VALIDITY</option>
+                <option value="1.5 Months">1.5 MONTHS VALIDITY</option>
+                <option value="3 Months">3 MONTHS VALIDITY</option>
+                <option value="Permanent">PERMANENT ACCESS TIER</option>
+            </select>
+        </div>
+        <button class="trigger-btn" style="background:linear-gradient(45deg, #0055ff, var(--accent-blue));" onclick="mintCustomLicensePassToken()">⚡ INJECT KEY REGISTRY</button>
+        
+        <div id="success_alert" style="color:var(--accent-green); text-align:center; font-size:11px; margin-top:8px;"></div>
+        
+        <h3 style="font-size:11px; color:var(--text-gray); margin-top:20px; margin-bottom:5px;">ACTIVE DATABASE CORES INDEXED HOOKS</h3>
+        <div class="token-hud-table" id="table_hud_logs"></div>
+    </div>
+
+</div>
+
+<script>
+    if(!localStorage.getItem('saved_licenses_vault')) {
+        localStorage.setItem('saved_licenses_vault', JSON.stringify({"M7-VIP": "Permanent", "MUHAMMAD-786": "1 Month"}));
+    }
+
+    window.authenticateAdminSystem = function() {
+        let pin = document.getElementById('admin_password_field').value.trim();
+        const SECRET = "Admin-@2013";
+
+        if(pin === SECRET) {
+            document.getElementById('auth_block').style.display = 'none';
+            document.getElementById('workspace_block').style.display = 'block';
+            renderHudLogsTable();
+        } else {
+            alert("ACCESS PROTOCOL TERMINATED: INVALID LOGISTIC SIGNATURE PIN.");
+        }
+    };
+
+    window.mintCustomLicensePassToken = function() {
+        let alias = document.getElementById('new_custom_key').value.trim().toUpperCase();
+        let duration = document.getElementById('new_key_duration').value;
+        if(!alias) alias = "PASS-" + Math.floor(100000 + Math.random() * 900000);
+
+        let database = JSON.parse(localStorage.getItem('saved_licenses_vault'));
+        database[alias] = duration;
+        localStorage.setItem('saved_licenses_vault', JSON.stringify(database));
+
+        document.getElementById('new_custom_key').value = "";
+        document.getElementById('success_alert').innerText = `Pass [${alias}] successfully active inside local router memory layout cache.`;
+        renderHudLogsTable();
+    };
+
+    function renderHudLogsTable() {
+        const table = document.getElementById('table_hud_logs');
+        let database = JSON.parse(localStorage.getItem('saved_licenses_vault'));
+        table.innerHTML = "";
+
+        Object.keys(database).forEach(k => {
+            table.innerHTML += `<div class='hud-row'><div><strong>${k}</strong> (${database[k]})</div><button class='wipe-btn' onclick='deleteRegisteredPassToken("${k}")'>DELETE</button></div>`;
+        });
+    }
+
+    window.deleteRegisteredPassToken = function(keyId) {
+        let database = JSON.parse(localStorage.getItem('saved_licenses_vault'));
+        delete database[keyId];
+        localStorage.setItem('saved_licenses_vault', JSON.stringify(database));
+        renderHudLogsTable();
+    };
+</script>
+</body>
+</html>
