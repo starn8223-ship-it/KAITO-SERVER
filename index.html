@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KAITO AI TRADING MATRIX V7.0</title>
+    <style>
+        :root {
+            --bg-black: #08090c;
+            --terminal-bg: #0d0f14;
+            --accent-green: #00ffaa;
+            --accent-blue: #00e1ff;
+            --accent-orange: #ff9100;
+            --accent-red: #ff3366;
+            --border-color: #1e2530;
+            --text-gray: #7e8c9f;
+        }
+        body { background-color: var(--bg-black); color: #ffffff; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 10px; display: flex; justify-content: center; min-height: 100vh; box-sizing: border-box; }
+        .app-container { width: 100%; max-width: 480px; background-color: var(--terminal-bg); border: 1px solid var(--border-color); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 15px 40px rgba(0, 225, 255, 0.05); }
+        .view-panel { padding: 15px; display: none; }
+        .view-panel.active { display: block; }
+        .header-title { font-family: monospace; font-size: 15px; color: var(--accent-blue); text-align: center; margin-top: 0; text-transform: uppercase; letter-spacing: 1px; }
+        .input-group { margin-bottom: 12px; }
+        .input-group label { display: block; font-size: 10px; color: var(--text-gray); font-family: monospace; margin-bottom: 4px; }
+        input, select { width: 100%; background-color: #06070a; border: 1px solid var(--border-color); padding: 12px; color: #fff; border-radius: 6px; box-sizing: border-box; outline: none; font-size: 12px; }
+        .btn-prime { width: 100%; background: linear-gradient(45deg, #0055ff, var(--accent-blue)); color: white; border: none; padding: 14px; font-weight: bold; font-family: monospace; cursor: pointer; border-radius: 6px; font-size: 13px; text-transform: uppercase; transition: all 0.2s; }
+        .btn-prime:active { transform: scale(0.98); }
+        .btn-generate { background: linear-gradient(45deg, #ff5100, var(--accent-orange)); margin-top: 10px; }
+        .tabs-row { display: flex; gap: 8px; margin-bottom: 12px; }
+        .tab-sub { flex: 1; padding: 10px; background-color: #06070a; border: 1px solid var(--border-color); color: var(--text-gray); font-size: 11px; font-family: monospace; cursor: pointer; border-radius: 6px; text-align: center; }
+        .tab-sub.active { border-color: var(--accent-blue); color: var(--accent-blue); background-color: rgba(0, 225, 255, 0.05); }
+        .tab-sub.otc-active { border-color: var(--accent-orange); color: var(--accent-orange); background-color: rgba(255, 145, 0, 0.05); }
+        .profile-badge { display: flex; align-items: center; gap: 10px; background-color: #06070a; border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; margin-bottom: 15px; }
+        .history-list { max-height: 120px; overflow-y: auto; background-color: #06070a; border: 1px solid var(--border-color); border-radius: 6px; font-family: monospace; font-size: 11px; }
+        .history-item { display: flex; justify-content: space-between; padding: 8px 10px; border-bottom: 1px solid #141923; }
+        
+        /* 🔥 PREMIUM GLOWING SCAN & LOADING ANIMATIONS */
+        .radar-box { position: relative; background-color: #06070a; border: 2px solid var(--border-color); border-radius: 8px; padding: 25px; text-align: center; font-family: monospace; margin-top: 15px; min-height: 90px; transition: all 0.3s ease; }
+        .loading-pulse { display: none; width: 40px; height: 40px; border: 3px solid rgba(0,225,255,0.1); border-radius: 50%; border-top-color: var(--accent-blue); margin: 10px auto; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(3600deg); } }
+        .countdown-num { font-size: 38px; font-weight: bold; display: none; margin: 5px 0; }
+        .signal-result { font-size: 24px; font-weight: bold; display: none; margin: 5px 0; letter-spacing: 1px; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    
+    <!-- 🔑 GATEWAY VIEW -->
+    <div id="panel_login" class="view-panel active">
+        <h2 class="header-title">🔑 KEY VERIFICATION GATEWAY</h2>
+        <div class="input-group">
+            <label>INPUT VALID CLIENT LICENSE TOKEN</label>
+            <input type="text" id="client_token_input" placeholder="Type or paste license key...">
+        </div>
+        <button class="btn-prime" onclick="verifyClientAccess()">UNLOCK TERMINAL</button>
+        <div id="login_error" style="color:var(--accent-red); font-size:11px; text-align:center; margin-top:10px; font-family:monospace;"></div>
+    </div>
+
+    <!-- 📊 TRADING MATRIX VIEW -->
+    <div id="panel_dashboard" class="view-panel">
+        
+        <!-- 👤 PROFILE HEAD -->
+        <div class="profile-badge">
+            <div style="width:32px; height:32px; background:#1e2530; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:bold; color:var(--accent-blue);">U</div>
+            <div style="flex:1;">
+                <div style="font-size:12px; font-weight:bold;" id="user_display_name">Premium Client</div>
+                <div style="font-size:9px; color:var(--text-gray); font-family:monospace;" id="user_license_badge">TIER: MONTHLY LICENSE</div>
+            </div>
+            <button style="background:none; border:1px solid var(--accent-red); color:var(--accent-red); font-size:10px; padding:4px 8px; border-radius:4px; cursor:pointer;" onclick="location.reload()">LOGOUT</button>
+        </div>
+
+        <!-- 🏢 BROKER SELECTION -->
+        <div class="input-group">
+            <label>TARGET BROKER ARCHITECTURE</label>
+            <select id="broker_select">
+                <option value="QUOTEX">QUOTEX NETWORK</option>
+                <option value="POCKET OPTION">POCKET OPTION INSTANCE</option>
+                <option value="IQ OPTION">IQ OPTION PLATFORM</option>
+                <option value="BINANCE">BINANCE EXCHANGE FEED</option>
+            </select>
+        </div>
+
+        <!-- 📈 MARKET CHANNELS TOGGLE -->
+        <div class="tabs-row">
+            <div id="tab_live" class="tab-sub active" onclick="toggleMarketEnv('REAL')">📈 LIVE MARKET</div>
+            <div id="tab_otc" class="tab-sub" onclick="toggleMarketEnv('OTC')">📊 SYNTHETIC OTC</div>
+        </div>
+
+        <!-- 🎯 ASSETS SELECTOR -->
+        <div class="input-group">
+            <label>FINANCIAL ASSET PAIR VECTOR</label>
+            <select id="asset_selector" onchange="resetRadarView()"></select>
+        </div>
+
+        <!-- ⚡ ASLI GENERATE BUTTON -->
+        <button class="btn-prime btn-generate" onclick="startSignalGenerationSequence()">⚡ GENERATE SIGNAL</button>
+
+        <!-- 🚨 ANIMATED SIGNAL SCREEN -->
+        <div class="radar-box" id="radar_card_frame">
+            <div id="radar_status_msg" style="color:var(--text-gray); font-size:11px;">CHOOSE PAIR & PRESS GENERATE</div>
+            <div class="loading-pulse" id="radar_loader"></div>
+            <div class="countdown-num" id="radar_countdown">5</div>
+            <div class="signal-result" id="radar_signal_output"></div>
+            <div style="font-size:10px; color:var(--text-gray); margin-top:5px; display:none;" id="radar_accuracy_text"></div>
+        </div>
+
+        <!-- 🗒️ TRADING HISTORY PROFILE -->
+        <h3 style="font-size:11px; font-family:monospace; color:var(--text-gray); margin-top:15px; margin-bottom:6px;">🗒️ LOCAL RUN TEMPLATE HISTORY</h3>
+        <div class="history-list" id="history_log_box">
+            <div style="padding:10px; color:var(--text-gray); text-align:center;">No recent trades logged.</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let activeEnv = 'REAL';
+    let generationClock = null;
+
+    const pairsList = [
+        { name: 'EUR/USD', tv: 'FX:EURUSD' }, { name: 'GBP/USD', tv: 'FX:GBPUSD' },
+        { name: 'BTC/USDT', tv: 'BINANCE:BTCUSDT' }, { name: 'ETH/USDT', tv: 'BINANCE:ETHUSDT' },
+        { name: 'GOLD', tv: 'OANDA:XAUUSD' }, { name: 'APPLE', tv: 'NASDAQ:AAPL' }
+    ];
+
+    if(!localStorage.getItem('saved_licenses_vault')) {
+        localStorage.setItem('saved_licenses_vault', JSON.stringify({"M7-VIP": "Permanent", "MUHAMMAD-786": "1 Month"}));
+    }
+
+    window.verifyClientAccess = function() {
+        let key = document.getElementById('client_token_input').value.trim().toUpperCase();
+        let err = document.getElementById('login_error');
+        if(!key) return;
+
+        let vault = JSON.parse(localStorage.getItem('saved_licenses_vault'));
+        if(vault[key]) {
+            document.getElementById('panel_login').style.display = 'none';
+            document.getElementById('panel_dashboard').style.display = 'block';
+            document.getElementById('user_display_name').innerText = "CLIENT ID: " + key;
+            document.getElementById('user_license_badge').innerText = "VALIDITY TIER: " + vault[key].toUpperCase();
+            toggleMarketEnv('REAL');
+        } else {
+            err.innerText = "ACCESS PORTAL ERROR: KEY REGISTRY NOT FOUND.";
+        }
+    };
+
+    window.toggleMarketEnv = function(env) {
+        activeEnv = env;
+        document.getElementById('tab_live').classList.toggle('active', env === 'REAL');
+        document.getElementById('tab_otc').classList.toggle('otc-active', env === 'OTC');
+        document.getElementById('tab_otc').classList.toggle('active', env === 'OTC');
+        
+        let selector = document.getElementById('asset_selector');
+        selector.innerHTML = pairsList.map(p => {
+            let label = (env === 'OTC') ? `${p.name} (OTC)` : p.name;
+            return `<option value="${label}">${label}</option>`;
+        }).join('');
+        resetRadarView();
+    };
+
+    window.resetRadarView = function() {
+        if(generationClock) clearInterval(generationClock);
+        document.getElementById('radar_status_msg').style.display = 'block';
